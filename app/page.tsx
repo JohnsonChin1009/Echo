@@ -1,5 +1,13 @@
 "use client"
 
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MSStream?: any;
+  }
+}
+
+
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Mic, StopCircle, Trash2 } from "lucide-react"
@@ -122,6 +130,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen px-4 py-8 flex flex-col items-center justify-center">
+      <InstallPrompt />
       <div className="w-full max-w-sm flex flex-col items-center space-y-12">
         <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
 
@@ -157,7 +166,7 @@ export default function HomePage() {
               variant="outline"
               size="icon"
               className={cn(
-                "w-20 h-20 rounded-full shadow-md transition-all duration-300 z-10 relative",
+                "w-20 h-20 rounded-full shadow-md transition-all z-10 relative",
                 isRecording
                   ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
                   : "bg-white hover:bg-gray-50 border-gray-200",
@@ -165,9 +174,9 @@ export default function HomePage() {
               onClick={isRecording ? stopRecording : startRecording}
             >
               {isRecording ? (
-                <StopCircle size={32} className="text-red-500" />
+                <StopCircle size={32} className="text-red-500 size-6" />
               ) : (
-                <Mic size={32} className="text-gray-700" />
+                <Mic className="text-gray-700 size-6" />
               )}
             </Button>
           </div>
@@ -205,5 +214,42 @@ export default function HomePage() {
         </div>
       )}
     </main>
+  )
+}
+
+function InstallPrompt() {
+  const [isIOS, setIsIOS] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window).MSStream);
+    setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
+    setIsReady(true);
+  }, []);
+
+  if (!isReady || isStandalone) {
+    return null;
+  }
+ 
+  return (
+    <div className="lg:hidden">
+      <h3>Install App</h3>
+      <button>Add to Home Screen</button>
+      {isIOS && (
+        <p>
+          To install this app on your iOS device, tap the share button
+          <span role="img" aria-label="share icon">
+            {' '}
+            ⎋{' '}
+          </span>
+          and then &ldquo;Add to Home Screen&rdquo;.
+          <span role="img" aria-label="plus icon">
+            {' '}
+            +{' '}
+          </span>.
+        </p>
+      )}
+    </div>
   )
 }
