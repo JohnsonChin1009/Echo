@@ -3,6 +3,7 @@ import { openDB } from "idb"
 
 export interface Recording {
   id: number
+  recordingName: string;
   blob: Blob
   createdAt: string // stored as ISO string
 }

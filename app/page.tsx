@@ -7,18 +7,18 @@ declare global {
   }
 }
 
-
-import { useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Mic, StopCircle, Trash2 } from "lucide-react"
-import { saveRecordingToDB, getAllRecordingsFromDB, deleteRecordingFromDB } from "@/lib/indexedDb"
-import { cn } from "@/lib/utils"
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Mic, StopCircle, Trash2 } from "lucide-react";
+import { saveRecordingToDB, getAllRecordingsFromDB, deleteRecordingFromDB } from "@/lib/indexedDb";
+import PWAInstallPrompt from "@/components/custom/PWAInstallPrompt";
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [timer, setTimer] = useState(180) // 3 minutes
-  const [recordings, setRecordings] = useState<{ id: number, blob: Blob; url: string; createdAt: Date }[]>([])
+  const [recordings, setRecordings] = useState<{ id: number, recordingName: string, blob: Blob; url: string; createdAt: Date }[]>([])
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -65,15 +65,15 @@ export default function HomePage() {
 
       recorder.ondataavailable = (e) => chunks.push(e.data)
       recorder.onstop = async () => {
-            const blob = new Blob(chunks, { type: "audio/webm" })
+            const blob = new Blob(chunks)
             const createdAt = new Date()
             const url = URL.createObjectURL(blob)
-
-            const id = await saveRecordingToDB({ blob, createdAt: createdAt.toISOString() })
+            const recordingName = `Recording ${createdAt.toLocaleString()}`
+            const id = await saveRecordingToDB({ recordingName, blob, createdAt: createdAt.toISOString() })
 
             setRecordings((prev) => [
               ...prev,
-              { id, blob, url, createdAt }
+              { id, recordingName, blob, url, createdAt }
             ])
 
             stream.getTracks().forEach((track) => track.stop())
@@ -130,7 +130,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen px-4 py-8 flex flex-col items-center justify-center">
-      <InstallPrompt />
+      <PWAInstallPrompt />
       <div className="w-full max-w-sm flex flex-col items-center space-y-12">
         <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
 
@@ -214,42 +214,5 @@ export default function HomePage() {
         </div>
       )}
     </main>
-  )
-}
-
-function InstallPrompt() {
-  const [isIOS, setIsIOS] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window).MSStream);
-    setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
-    setIsReady(true);
-  }, []);
-
-  if (!isReady || isStandalone) {
-    return null;
-  }
- 
-  return (
-    <div className="lg:hidden">
-      <h3>Install App</h3>
-      <button>Add to Home Screen</button>
-      {isIOS && (
-        <p>
-          To install this app on your iOS device, tap the share button
-          <span role="img" aria-label="share icon">
-            {' '}
-            ⎋{' '}
-          </span>
-          and then &ldquo;Add to Home Screen&rdquo;.
-          <span role="img" aria-label="plus icon">
-            {' '}
-            +{' '}
-          </span>.
-        </p>
-      )}
-    </div>
   )
 }
