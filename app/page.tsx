@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Mic, StopCircle, Trash2 } from "lucide-react"
+import { saveRecordingToDB, getAllRecordingsFromDB, deleteRecordingFromDB } from "@/lib/indexedDb"
 import { cn } from "@/lib/utils"
 
 export default function HomePage() {
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [timer, setTimer] = useState(180) // 3 minutes
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
-  const [recordings, setRecordings] = useState<{ blob: Blob; url: string; createdAt: Date }[]>([])
+  const [recordings, setRecordings] = useState<{ id: number, blob: Blob; url: string; createdAt: Date }[]>([])
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -18,7 +18,20 @@ export default function HomePage() {
   const MAX_RECORDING_TIME = 180 // 3 minutes in seconds
   const circumference = 2 * Math.PI * 30 // Circle circumference (2πr) where r=30
 
-  console.log("Audio Chunks: ", audioChunks);
+  useEffect(() => {
+    const loadRecordings = async () => {
+      const data = await getAllRecordingsFromDB()
+      const withUrls = data.map((r) => ({
+        ...r,
+        url: URL.createObjectURL(r.blob),
+        createdAt: new Date(r.createdAt),
+      }))
+      setRecordings(withUrls)
+    }
+
+    loadRecordings()
+  }, [])
+
   useEffect(() => {
     if (isRecording && timer > 0) {
       timerRef.current = setTimeout(() => {
@@ -43,20 +56,24 @@ export default function HomePage() {
       const chunks: Blob[] = []
 
       recorder.ondataavailable = (e) => chunks.push(e.data)
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: "audio/webm" })
-        const url = URL.createObjectURL(blob)
-        setRecordings((prev) => [...prev, { blob, url, createdAt: new Date() }])
-        setAudioChunks([])
+      recorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: "audio/webm" })
+            const createdAt = new Date()
+            const url = URL.createObjectURL(blob)
 
-        // Stop all tracks
-        stream.getTracks().forEach((track) => track.stop())
-        streamRef.current = null
+            const id = await saveRecordingToDB({ blob, createdAt: createdAt.toISOString() })
+
+            setRecordings((prev) => [
+              ...prev,
+              { id, blob, url, createdAt }
+            ])
+
+            stream.getTracks().forEach((track) => track.stop())
+            streamRef.current = null
       }
 
       recorder.start()
       setMediaRecorder(recorder)
-      setAudioChunks(chunks)
       setIsRecording(true)
       setTimer(MAX_RECORDING_TIME)
     } catch (error) {
@@ -72,13 +89,13 @@ export default function HomePage() {
     setTimer(MAX_RECORDING_TIME)
   }
 
-  const deleteRecording = (index: number) => {
-    setRecordings((prev) => {
-      const newRecordings = [...prev]
-      URL.revokeObjectURL(newRecordings[index].url)
-      newRecordings.splice(index, 1)
-      return newRecordings
-    })
+  const deleteRecording = async (index: number) => {
+    const rec = recordings[index]
+    if (rec.id != null) {
+      await deleteRecordingFromDB(rec.id)
+    }
+    URL.revokeObjectURL(rec.url)
+    setRecordings((prev) => prev.filter((_, i) => i !== index))
   }
 
   const formatTime = (seconds: number) => {
