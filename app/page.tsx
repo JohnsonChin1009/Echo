@@ -18,6 +18,7 @@ export default function HomePage() {
   const MAX_RECORDING_TIME = 180 // 3 minutes in seconds
   const circumference = 2 * Math.PI * 30 // Circle circumference (2πr) where r=30
 
+  console.log("Audio Chunks: ", audioChunks);
   useEffect(() => {
     if (isRecording && timer > 0) {
       timerRef.current = setTimeout(() => {
