@@ -154,7 +154,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <span className="text-sm text-gray-500">{!isRecording && "Tap to record a thought"}</span>
+          <span className="text-sm font-medium text-gray-500">{!isRecording && "Tap to record a thought"}</span>
         </div>
       </div>
 
