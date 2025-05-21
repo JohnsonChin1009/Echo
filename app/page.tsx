@@ -25,7 +25,7 @@ export default function HomePage() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const MAX_RECORDING_TIME = 180 // 3 minutes in seconds
-  const buttonRadius = 40 // Button radius in pixels
+  const buttonRadius = 30 // Button radius in pixels
   const strokeWidth = 4 // Width of the progress stroke
   const radius = buttonRadius + strokeWidth // Outer radius for the SVG circle
   const circumference = 2 * Math.PI * radius // Circle circumference (2πr)
@@ -129,11 +129,45 @@ export default function HomePage() {
   return (
     <main className="min-h-screen px-4 py-8 flex flex-col items-center justify-center">
       <PWAInstallPrompt />
-      <div className="w-full max-w-sm flex flex-col items-center space-y-12">
+      <div className="w-full max-w-sm flex flex-col items-center space-y-6">
         <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
-
+        <p className="italic text-center">record raw thoughts now, and make sense of it later</p>
       <div className="flex flex-col items-center space-y-8 w-full">
-                <div className="relative">
+{/* Recordings */}
+{recordings.length > 0 ? (
+  <div className="w-full max-w-sm mt-16 space-y-4">
+    <h2 className="text-base font-medium text-gray-700 border-b pb-2">Your Thoughts</h2>
+    <div className="space-y-4 overflow-y-auto max-h-[50vh] pr-1">
+      {recordings.map((rec, i) => (
+        <div
+          key={i}
+          className="bg-white p-4 rounded-lg flex flex-col gap-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-gray-800">{rec.recordingName}</span>
+              <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50"
+              onClick={() => deleteRecording(i)}
+              aria-label="Delete recording"
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
+          <audio controls className="w-full h-8" src={rec.url} preload="metadata" />
+        </div>
+      ))}
+    </div>
+  </div>
+) : (
+  <div className="mt-16 text-gray-400 text-sm"></div>
+)}
+<div className="space-y-5 flex flex-col items-center justify-center">
+<div className="relative">
                   {/* Radial countdown timer surrounding the button */}
                   {isRecording && (
                     <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 w-28 h-28">
@@ -159,7 +193,7 @@ export default function HomePage() {
                     variant="outline"
                     size="icon"
                     className={cn(
-                      "w-20 h-20 rounded-full shadow-md transition-all duration-300 z-10 relative",
+                      "w-[60px] h-[60px] rounded-full shadow-md transition-all duration-300 z-10 relative",
                       isRecording
                         ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
                         : "bg-white hover:bg-gray-50 border-gray-200",
@@ -169,49 +203,20 @@ export default function HomePage() {
                     {isRecording ? (
                       <FaRegCircleStop
                         size={32}
-                        className={cn("text-red-500 size-5 lg:size-6", "animate-[pulse_1.5s_ease-in-out_infinite]")}
+                        className={cn("text-red-500 size-4 lg:size-6", "animate-[pulse_1.5s_ease-in-out_infinite]")}
                       />
                     ) : (
-                      <Mic size={32} className="text-gray-700 size-5 lg:size-6" />
+                      <Mic size={32} className="text-gray-700 size-4 lg:size-6" />
                     )}
                   </Button>
                 </div>
-
                 <span className="text-sm text-gray-500">{!isRecording && "Tap to record a thought"}</span>
+</div>
+                
               </div>
             </div>
 
-      {/* Recordings */}
-      {recordings.length > 0 && (
-        <div className="w-full max-w-sm mt-16 space-y-4">
-          <h2 className="text-base font-medium text-gray-700 border-b pb-2">Your Thoughts</h2>
-          <div className="space-y-4 overflow-y-auto max-h-[50vh] pr-1">
-            {recordings.map((rec, i) => (
-              <div
-                key={i}
-                className="bg-white p-4 rounded-lg flex flex-col gap-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-800">{rec.recordingName}</span>
-                    <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50"
-                    onClick={() => deleteRecording(i)}
-                    aria-label="Delete recording"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-                <audio controls className="w-full h-8" src={rec.url} preload="metadata"></audio>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      
     </main>
   )
 }
