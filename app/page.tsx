@@ -140,7 +140,7 @@ export default function HomePage() {
 
       {/* Scrollable recordings section */}
       <div className="space-y-4 px-4 flex flex-col items-center w-full lg:max-w-md">
-      <h2 className="text-base font-medium text-gray-700 border-b pb-2 sticky top-0 bg-white self-start">your thoughts</h2>
+      <h2 className="text-base font-medium text-gray-700 sticky top-0 bg-white self-start">your thoughts</h2>
       <ScrollArea className="h-[300px] w-full md:h-[400px] rounded-md border p-4 max-w-sm lg:max-w-md">
         <div className="w-full">
           {recordings.length > 0 ? (
