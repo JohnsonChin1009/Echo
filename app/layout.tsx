@@ -19,6 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+    <link rel="apple-touch-icon" href="/apple-icon.png" type="image/png" sizes="180x180" />
       <body
         className={`${manrope.className} antialiased`}
       >
