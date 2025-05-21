@@ -141,7 +141,7 @@ export default function HomePage() {
       {/* Scrollable recordings section */}
       <div className="space-y-4 px-4 flex flex-col items-center w-full lg:max-w-md">
       <h2 className="text-base font-medium text-gray-700 border-b pb-2 sticky top-0 bg-white self-start">your thoughts</h2>
-      <ScrollArea className="h-[280px] w-full md:h-[400px] rounded-md border p-4 max-w-sm lg:max-w-md">
+      <ScrollArea className="h-[300px] w-full md:h-[400px] rounded-md border p-4 max-w-sm lg:max-w-md">
         <div className="w-full">
           {recordings.length > 0 ? (
             <div className="space-y-4 pb-32">
@@ -171,7 +171,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <p className="text-gray-400 text-sm">No recordings yet</p>
+              <p className="text-gray-400 text-sm italic">no recordings yet</p>
             </div>
           )}
         </div>
@@ -180,7 +180,7 @@ export default function HomePage() {
       
 
       {/* Fixed recording button section */}
-      <div className="fixed bottom-0 left-0 right-0 py-8 px-4 flex flex-col items-center bg-white border-t border-gray-100">
+      <div className="fixed bottom-0 left-0 right-0 py-8 px-4 flex flex-col items-center bg-white border-gray-100">
         <div className="w-full max-w-sm flex flex-col items-center space-y-4">
           <div className="relative">
             {/* Radial countdown timer surrounding the button */}
