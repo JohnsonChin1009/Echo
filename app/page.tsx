@@ -225,7 +225,9 @@ export default function HomePage() {
               )}
             </Button>
           </div>
-          <span className="text-sm text-gray-500">{!isRecording && "tap to record"}</span>
+          <span className={cn("text-sm text-gray-500 transition-opacity", isRecording ? "opacity-0" : "opacity-100")}>
+            tap to record
+          </span>
         </div>
       </div>
     </main>
