@@ -65,33 +65,33 @@ export default function HomePage() {
 
       recorder.ondataavailable = (e) => chunks.push(e.data)
       recorder.onstop = async () => {
-            const blob = new Blob(chunks)
-            const createdAt = new Date()
-            const url = URL.createObjectURL(blob)
-            const recordingName = `Recording ${createdAt.toLocaleString()}`
-            const id = await saveRecordingToDB({ recordingName, blob, createdAt: createdAt.toISOString() })
+            const blob = new Blob(chunks as BlobPart[], { type: "audio/mp4" });
+            const createdAt = new Date();
+            const url = URL.createObjectURL(blob);
+            const recordingName = `Recording ${createdAt.toLocaleString()}`;
+            const id = await saveRecordingToDB({ recordingName, blob, createdAt: createdAt.toISOString() });
 
             setRecordings((prev) => [
               ...prev,
               { id, recordingName, blob, url, createdAt }
             ])
 
-            stream.getTracks().forEach((track) => track.stop())
-            streamRef.current = null
+            stream.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
       }
 
-      recorder.start()
-      setMediaRecorder(recorder)
-      setIsRecording(true)
-      setTimer(MAX_RECORDING_TIME)
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setTimer(MAX_RECORDING_TIME);
     } catch (error) {
-      console.error("Error accessing microphone:", error)
+      console.error("Error accessing microphone:", error);
     }
   }
 
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop()
+      mediaRecorder.stop();
     }
     setIsRecording(false)
     setTimer(MAX_RECORDING_TIME)
@@ -100,15 +100,15 @@ export default function HomePage() {
   const deleteRecording = async (index: number) => {
     const rec = recordings[index]
     if (rec.id != null) {
-      await deleteRecordingFromDB(rec.id)
+      await deleteRecordingFromDB(rec.id);
     }
-    URL.revokeObjectURL(rec.url)
+    URL.revokeObjectURL(rec.url);
     setRecordings((prev) => prev.filter((_, i) => i !== index))
   }
 
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
@@ -157,7 +157,7 @@ export default function HomePage() {
                 />
               </svg>
               {/* Timer text */}
-              <div className="text-xl font-mono font-medium text-red-500 z-10">{formatTime(timer)}</div>
+              <div className="text-xl font-mono font-medium text-red-500 z-10 p-4">{formatTime(timer)}</div>
             </div>
           )}
 
@@ -196,7 +196,10 @@ export default function HomePage() {
                 className="bg-white p-4 rounded-lg flex flex-col gap-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-800">{rec.recordingName}</span>
+                    <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
