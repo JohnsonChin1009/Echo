@@ -13,6 +13,7 @@ import { Mic, Trash2 } from "lucide-react";
 import { saveRecordingToDB, getAllRecordingsFromDB, deleteRecordingFromDB } from "@/lib/indexedDb";
 import PWAInstallPrompt from "@/components/custom/PWAInstallPrompt";
 import { FaRegCircleStop } from "react-icons/fa6";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export default function HomePage() {
@@ -127,96 +128,106 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8 flex flex-col items-center justify-center">
+    <main className="min-h-screen flex flex-col items-center px-4">
       <PWAInstallPrompt />
-      <div className="w-full max-w-sm flex flex-col items-center space-y-6">
-        <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
-        <p className="italic text-center">record raw thoughts now, and make sense of it later</p>
-      <div className="flex flex-col items-center space-y-8 w-full">
-{/* Recordings */}
-{recordings.length > 0 ? (
-  <div className="w-full max-w-sm mt-16 space-y-4">
-    <h2 className="text-base font-medium text-gray-700 border-b pb-2">Your Thoughts</h2>
-    <div className="space-y-4 overflow-y-auto max-h-[50vh] pr-1">
-      {recordings.map((rec, i) => (
-        <div
-          key={i}
-          className="bg-white p-4 rounded-lg flex flex-col gap-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-        >
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-800">{rec.recordingName}</span>
-              <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
+      {/* Fixed header section */}
+      <div className="w-full flex flex-col items-center justify-center bg-white">
+        <div className="w-full max-w-sm flex flex-col items-center space-y-2 pt-[30%] pb-[10%] md:pt-[10%] md:pb-[5%]">
+          <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
+          <p className="italic text-center">record raw thoughts now, and make sense of it later</p>
+        </div>
+      </div>
+
+      {/* Scrollable recordings section */}
+      <div className="space-y-4 px-4 flex flex-col items-center w-full lg:max-w-md">
+      <h2 className="text-base font-medium text-gray-700 border-b pb-2 sticky top-0 bg-white self-start">your thoughts</h2>
+      <ScrollArea className="h-[280px] w-full md:h-[400px] rounded-md border p-4 max-w-sm lg:max-w-md">
+        <div className="w-full">
+          {recordings.length > 0 ? (
+            <div className="space-y-4 pb-32">
+              {recordings.map((rec, i) => (
+                <div
+                  key={i}
+                  className="bg-white p-4 rounded-lg flex flex-col gap-3 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-800">{rec.recordingName}</span>
+                      <span className="text-xs text-gray-500">{formatDate(rec.createdAt)}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                      onClick={() => deleteRecording(i)}
+                      aria-label="Delete recording"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                  <audio controls className="w-full h-8" src={rec.url} preload="metadata" />
+                </div>
+              ))}
             </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-gray-400 text-sm">No recordings yet</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+      </div>
+      
+
+      {/* Fixed recording button section */}
+      <div className="fixed bottom-0 left-0 right-0 py-8 px-4 flex flex-col items-center bg-white border-t border-gray-100">
+        <div className="w-full max-w-sm flex flex-col items-center space-y-4">
+          <div className="relative">
+            {/* Radial countdown timer surrounding the button */}
+            {isRecording && (
+              <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 w-28 h-28">
+                {/* Background circle */}
+                <circle cx="50%" cy="50%" r={radius} stroke="#f1f1f1" strokeWidth={strokeWidth} fill="none" />
+                {/* Progress circle */}
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r={radius}
+                  stroke="#ef4444"
+                  strokeWidth={strokeWidth}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={calculateProgress()}
+                  className="transition-all duration-1000 ease-linear"
+                />
+              </svg>
+            )}
+
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50"
-              onClick={() => deleteRecording(i)}
-              aria-label="Delete recording"
+              className={cn(
+                "w-[60px] h-[60px] rounded-full shadow-md transition-all duration-300 z-10 relative",
+                isRecording
+                  ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
+                  : "bg-white hover:bg-gray-50 border-gray-200",
+              )}
+              onClick={isRecording ? stopRecording : startRecording}
             >
-              <Trash2 size={16} />
+              {isRecording ? (
+                <FaRegCircleStop
+                  size={32}
+                  className={cn("text-red-500 size-4 lg:size-6", "animate-[pulse_1.5s_ease-in-out_infinite]")}
+                />
+              ) : (
+                <Mic size={32} className="text-gray-700 size-4 lg:size-6" />
+              )}
             </Button>
           </div>
-          <audio controls className="w-full h-8" src={rec.url} preload="metadata" />
+          <span className="text-sm text-gray-500">{!isRecording && "tap to record"}</span>
         </div>
-      ))}
-    </div>
-  </div>
-) : (
-  <div className="mt-16 text-gray-400 text-sm"></div>
-)}
-<div className="space-y-5 flex flex-col items-center justify-center">
-<div className="relative">
-                  {/* Radial countdown timer surrounding the button */}
-                  {isRecording && (
-                    <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 w-28 h-28">
-                      {/* Background circle */}
-                      <circle cx="50%" cy="50%" r={radius} stroke="#f1f1f1" strokeWidth={strokeWidth} fill="none" />
-                      {/* Progress circle */}
-                      <circle
-                        cx="50%"
-                        cy="50%"
-                        r={radius}
-                        stroke="#ef4444"
-                        strokeWidth={strokeWidth}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={calculateProgress()}
-                        className="transition-all duration-1000 ease-linear"
-                      />
-                    </svg>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                      "w-[60px] h-[60px] rounded-full shadow-md transition-all duration-300 z-10 relative",
-                      isRecording
-                        ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
-                        : "bg-white hover:bg-gray-50 border-gray-200",
-                    )}
-                    onClick={isRecording ? stopRecording : startRecording}
-                  >
-                    {isRecording ? (
-                      <FaRegCircleStop
-                        size={32}
-                        className={cn("text-red-500 size-4 lg:size-6", "animate-[pulse_1.5s_ease-in-out_infinite]")}
-                      />
-                    ) : (
-                      <Mic size={32} className="text-gray-700 size-4 lg:size-6" />
-                    )}
-                  </Button>
-                </div>
-                <span className="text-sm text-gray-500">{!isRecording && "Tap to record a thought"}</span>
-</div>
-                
-              </div>
-            </div>
-
-      
+      </div>
     </main>
   )
 }
