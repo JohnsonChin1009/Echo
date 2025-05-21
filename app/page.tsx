@@ -9,9 +9,10 @@ declare global {
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, StopCircle, Trash2 } from "lucide-react";
+import { Mic, Trash2 } from "lucide-react";
 import { saveRecordingToDB, getAllRecordingsFromDB, deleteRecordingFromDB } from "@/lib/indexedDb";
 import PWAInstallPrompt from "@/components/custom/PWAInstallPrompt";
+import { FaRegCircleStop } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 
 export default function HomePage() {
@@ -24,7 +25,10 @@ export default function HomePage() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const MAX_RECORDING_TIME = 180 // 3 minutes in seconds
-  const circumference = 2 * Math.PI * 30 // Circle circumference (2πr) where r=30
+  const buttonRadius = 40 // Button radius in pixels
+  const strokeWidth = 4 // Width of the progress stroke
+  const radius = buttonRadius + strokeWidth // Outer radius for the SVG circle
+  const circumference = 2 * Math.PI * radius // Circle circumference (2πr)
 
   useEffect(() => {
     const loadRecordings = async () => {
@@ -106,12 +110,6 @@ export default function HomePage() {
     setRecordings((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
-
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
@@ -134,56 +132,54 @@ export default function HomePage() {
       <div className="w-full max-w-sm flex flex-col items-center space-y-12">
         <h1 className="text-2xl text-center text-gray-800 font-bold">hey, what&apos;s up?</h1>
 
-        <div className="flex flex-col items-center space-y-8 w-full">
-          {/* Timer with radial countdown */}
-          {isRecording && (
-            <div className="relative flex items-center justify-center">
-              {/* Radial countdown timer */}
-              <svg className="absolute -rotate-90 w-20 h-20">
-                {/* Background circle */}
-                <circle cx="50%" cy="50%" r="30" stroke="#f1f1f1" strokeWidth="4" fill="none" />
-                {/* Progress circle */}
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="30"
-                  stroke="#ef4444"
-                  strokeWidth="4"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={calculateProgress()}
-                  className="transition-all duration-1000 ease-linear"
-                />
-              </svg>
-              {/* Timer text */}
-              <div className="text-xl font-mono font-medium text-red-500 z-10 p-4">{formatTime(timer)}</div>
+      <div className="flex flex-col items-center space-y-8 w-full">
+                <div className="relative">
+                  {/* Radial countdown timer surrounding the button */}
+                  {isRecording && (
+                    <svg className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 w-28 h-28">
+                      {/* Background circle */}
+                      <circle cx="50%" cy="50%" r={radius} stroke="#f1f1f1" strokeWidth={strokeWidth} fill="none" />
+                      {/* Progress circle */}
+                      <circle
+                        cx="50%"
+                        cy="50%"
+                        r={radius}
+                        stroke="#ef4444"
+                        strokeWidth={strokeWidth}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={calculateProgress()}
+                        className="transition-all duration-1000 ease-linear"
+                      />
+                    </svg>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      "w-20 h-20 rounded-full shadow-md transition-all duration-300 z-10 relative",
+                      isRecording
+                        ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
+                        : "bg-white hover:bg-gray-50 border-gray-200",
+                    )}
+                    onClick={isRecording ? stopRecording : startRecording}
+                  >
+                    {isRecording ? (
+                      <FaRegCircleStop
+                        size={32}
+                        className={cn("text-red-500 size-5 lg:size-6", "animate-[pulse_1.5s_ease-in-out_infinite]")}
+                      />
+                    ) : (
+                      <Mic size={32} className="text-gray-700 size-5 lg:size-6" />
+                    )}
+                  </Button>
+                </div>
+
+                <span className="text-sm text-gray-500">{!isRecording && "Tap to record a thought"}</span>
+              </div>
             </div>
-          )}
-
-          <div className="relative">
-            <Button
-              variant="outline"
-              size="icon"
-              className={cn(
-                "w-20 h-20 rounded-full shadow-md transition-all z-10 relative",
-                isRecording
-                  ? "bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300"
-                  : "bg-white hover:bg-gray-50 border-gray-200",
-              )}
-              onClick={isRecording ? stopRecording : startRecording}
-            >
-              {isRecording ? (
-                <StopCircle size={32} className="text-red-500 size-6" />
-              ) : (
-                <Mic className="text-gray-700 size-6" />
-              )}
-            </Button>
-          </div>
-
-          <span className="text-sm font-medium text-gray-500">{!isRecording && "Tap to record a thought"}</span>
-        </div>
-      </div>
 
       {/* Recordings */}
       {recordings.length > 0 && (
